@@ -1,0 +1,16 @@
+# Downloaded models (keep the script)
+models/*
+!models/download_models.sh
+
+# Audio data and voiceprints
+enroll/
+audio/
+output/
+personas/voiceprints.npz
+
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+.uv/
+uv.lock

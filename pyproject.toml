@@ -1,0 +1,28 @@
+[project]
+name = "voice-rec"
+version = "0.1.0"
+description = "Batch audio transcription with speaker diarization and voice recognition, on Apple Silicon"
+requires-python = ">=3.11"
+dependencies = [
+    "parakeet-mlx==0.5.1",
+    "mlx-whisper==0.4.3",
+    "sherpa-onnx==1.12.40",
+    "sherpa-onnx-core==1.12.40",
+    "numpy==2.4.6",
+]
+
+[tool.uv]
+package = false
+
+# The sherpa-onnx wheels published on PyPI do not bundle onnxruntime on
+# macOS arm64 (the dylib is missing at import time). We force installation
+# from the official k2-fsa wheel index, which also provides the
+# `sherpa-onnx-core` package containing the ONNX runtime.
+[[tool.uv.index]]
+name = "k2-fsa"
+url = "https://k2-fsa.github.io/sherpa/onnx/cpu.html"
+format = "flat"
+
+[tool.uv.sources]
+sherpa-onnx = { index = "k2-fsa" }
+sherpa-onnx-core = { index = "k2-fsa" }
