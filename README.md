@@ -1,6 +1,6 @@
 # voice_rec: Transcription + diarization + your-voice recognition
 
-**Local** audio transcription. Tested on Apple Silicon (M3 Pro), featuring:
+**Local** audio transcription. Tested on Apple Silicon (M1 and M3), featuring:
 
 - **Multilingual transcription** (fr + en) via NVIDIA's **Parakeet v3**, accelerated by the Apple GPU (MLX).
 - **Optional language forcing** via OpenAI's **Whisper large-v3** (also MLX): pass a language to avoid code-switching.
