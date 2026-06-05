@@ -1,4 +1,4 @@
-# voice_rec: Transcription + diarization + your-voice recognition
+# localscribe: Transcription + diarization + your-voice recognition
 
 **Local** audio transcription. Tested on Apple Silicon (M1 and M3), featuring:
 
@@ -136,11 +136,11 @@ run with `LANG`, into the shared Hugging Face cache. Use `LANG=fr`, `LANG=en`, e
 For finer control, call the CLI directly:
 
 ```bash
-uv run python -m voice_rec transcribe audio/meeting.m4a \
+uv run python -m localscribe transcribe audio/meeting.m4a \
   --speakers 2 --id-threshold 0.5 --cluster-threshold 0.5
 
 # Force French (uses the Whisper backend):
-uv run python -m voice_rec transcribe audio/meeting.m4a --speakers 2 --language fr
+uv run python -m localscribe transcribe audio/meeting.m4a --speakers 2 --language fr
 ```
 
 - `--speakers N`: number of speakers if known (more reliable than auto).
@@ -176,14 +176,14 @@ System Settings → Privacy & Security → Microphone.
 | Item | Role |
 |------|------|
 | `personas/` | Stored voiceprints (`voiceprints.npz`, not versioned) |
-| `voice_rec/audio.py` | Audio decoding to 16 kHz mono via ffmpeg |
-| `voice_rec/speakers.py` | Diarization + voiceprints + identification (sherpa-onnx) |
-| `voice_rec/asr.py` | Parakeet transcription (MLX), automatic language |
-| `voice_rec/whisper_asr.py` | Whisper transcription (MLX), forced language |
-| `voice_rec/report.py` | Merge + Markdown rendering |
-| `voice_rec/enroll.py` | Voiceprint enrollment |
-| `voice_rec/pipeline.py` | End-to-end orchestration |
-| `voice_rec/__main__.py` | CLI |
+| `localscribe/audio.py` | Audio decoding to 16 kHz mono via ffmpeg |
+| `localscribe/speakers.py` | Diarization + voiceprints + identification (sherpa-onnx) |
+| `localscribe/asr.py` | Parakeet transcription (MLX), automatic language |
+| `localscribe/whisper_asr.py` | Whisper transcription (MLX), forced language |
+| `localscribe/report.py` | Merge + Markdown rendering |
+| `localscribe/enroll.py` | Voiceprint enrollment |
+| `localscribe/pipeline.py` | End-to-end orchestration |
+| `localscribe/__main__.py` | CLI |
 | `Makefile` | Common commands |
 
 

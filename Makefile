@@ -1,4 +1,4 @@
-# voice_rec — batch transcription with diarization and voice recognition
+# localscribe — batch transcription with diarization and voice recognition
 #
 # Common usage:
 #   make setup                              # install deps + download models
@@ -8,7 +8,7 @@
 #   make transcribe FILE=audio/meeting.m4a SPEAKERS=3
 #   make clean
 
-RUN := uv run --no-sync python -m voice_rec
+RUN := uv run --no-sync python -m localscribe
 
 # Overridable variables
 NAME     ?=
@@ -32,7 +32,7 @@ endif
 
 .PHONY: help
 help: ## Show this help
-	@echo "voice_rec — available targets:"
+	@echo "localscribe — available targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 	@echo ""

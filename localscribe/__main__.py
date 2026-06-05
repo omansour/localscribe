@@ -2,19 +2,19 @@
 
 Examples:
     # 1. Enroll your voice (10-30 s of clean samples of you speaking)
-    uv run python -m voice_rec enroll --name "Me" enroll/me_1.wav enroll/me_2.wav
+    uv run python -m localscribe enroll --name "Me" enroll/me_1.wav enroll/me_2.wav
 
     # 2. List known voiceprints
-    uv run python -m voice_rec list
+    uv run python -m localscribe list
 
     # 3. Transcribe a file (Markdown output in output/)
-    uv run python -m voice_rec transcribe audio/meeting.m4a
+    uv run python -m localscribe transcribe audio/meeting.m4a
 
     # Specify the number of speakers if you know it (more reliable):
-    uv run python -m voice_rec transcribe audio/meeting.m4a --speakers 3
+    uv run python -m localscribe transcribe audio/meeting.m4a --speakers 3
 
     # Force a language to avoid code-switching (uses the Whisper backend):
-    uv run python -m voice_rec transcribe audio/meeting.m4a --language fr
+    uv run python -m localscribe transcribe audio/meeting.m4a --language fr
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from .pipeline import DEFAULT_OUTPUT_DIR, process_file
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="voice_rec",
+        prog="localscribe",
         description="Batch transcription with speaker diarization and voice recognition (Apple Silicon).",
     )
     sub = parser.add_subparsers(dest="command", required=True)

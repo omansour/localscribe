@@ -1,5 +1,5 @@
 [project]
-name = "voice-rec"
+name = "localscribe"
 version = "0.1.0"
 description = "Batch audio transcription with speaker diarization and voice recognition, on Apple Silicon"
 requires-python = ">=3.11"

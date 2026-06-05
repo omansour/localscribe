@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`voice_rec` is a **fully local, offline** CLI that takes an audio (or video) file and produces a
+`localscribe` is a **fully local, offline** CLI that takes an audio (or video) file and produces a
 Markdown transcript with diarization ("who spoke when") and recognition of enrolled voices
 ("that turn was Me"). Targets macOS Apple Silicon; ASR runs on the Apple GPU via MLX,
 diarization/embeddings run on CPU via sherpa-onnx. No cloud, no NVIDIA GPU, no Hugging Face token.
@@ -12,7 +12,7 @@ diarization/embeddings run on CPU via sherpa-onnx. No cloud, no NVIDIA GPU, no H
 ## Commands
 
 Everything is driven through the Makefile (`make help` lists targets). The CLI itself is
-`uv run --no-sync python -m voice_rec <command>`.
+`uv run --no-sync python -m localscribe <command>`.
 
 ```bash
 make setup                                              # uv sync + download diarization/voiceprint models
