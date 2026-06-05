@@ -13,4 +13,3 @@ personas/voiceprints.npz
 __pycache__/
 *.pyc
 .uv/
-uv.lock

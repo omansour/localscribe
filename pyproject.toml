@@ -26,3 +26,8 @@ format = "flat"
 [tool.uv.sources]
 sherpa-onnx = { index = "k2-fsa" }
 sherpa-onnx-core = { index = "k2-fsa" }
+
+[dependency-groups]
+dev = [
+    "pip-audit>=2.10.0",
+]
