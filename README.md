@@ -15,6 +15,7 @@ Everything runs offline. No NVIDIA GPU, no cloud, no Hugging Face token required
 | Target | Description |
 |--------|-------------|
 | `make help` | Show available targets |
+| `make check` | Verify all system requirements (arch, ffmpeg, uv, Python, models) |
 | `make install` | Install Python dependencies (`uv sync`) |
 | `make models` | Download diarization / voiceprint models |
 | `make setup` | Full setup: install deps + download models |
@@ -37,6 +38,8 @@ so any format ffmpeg can read works: **wav, mp3, m4a, flac, ogg, ...** as well a
 - macOS Apple Silicon (M1/M2/M3/M4)
 - `ffmpeg`: `brew install ffmpeg`
 - `uv` (Python package manager)
+
+Run `make check` to verify all prerequisites before installing.
 
 ## Installation
 

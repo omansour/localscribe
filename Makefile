@@ -40,6 +40,53 @@ help: ## Show this help
 	@echo "  make enroll NAME=\"Me\" FILES=\"enroll/me_1.wav enroll/me_2.wav\""
 	@echo "  make transcribe FILE=audio/meeting.m4a SPEAKERS=2"
 
+.PHONY: check
+check: ## Check that all system requirements are met
+	@echo "Checking system requirements..."
+	@errors=0; \
+	arch=$$(uname -m); \
+	if [ "$$arch" != "arm64" ]; then \
+		echo "  [FAIL] Architecture: $$arch (need arm64 / Apple Silicon)"; errors=$$((errors+1)); \
+	else \
+		echo "  [ OK ] Architecture: $$arch"; \
+	fi; \
+	if ! command -v ffmpeg >/dev/null 2>&1; then \
+		echo "  [FAIL] ffmpeg not found (brew install ffmpeg)"; errors=$$((errors+1)); \
+	else \
+		echo "  [ OK ] ffmpeg: $$(ffmpeg -version 2>&1 | head -1)"; \
+	fi; \
+	if ! command -v uv >/dev/null 2>&1; then \
+		echo "  [FAIL] uv not found (see https://docs.astral.sh/uv/)"; errors=$$((errors+1)); \
+	else \
+		echo "  [ OK ] uv: $$(uv --version)"; \
+	fi; \
+	if [ ! -d .venv ]; then \
+		echo "  [WARN] .venv not found — run: make install"; \
+	else \
+		pyver=$$(uv run --no-sync python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null); \
+		major=$$(echo $$pyver | cut -d. -f1); \
+		minor=$$(echo $$pyver | cut -d. -f2); \
+		if [ "$$major" -lt 3 ] || { [ "$$major" -eq 3 ] && [ "$$minor" -lt 11 ]; }; then \
+			echo "  [FAIL] Python $$pyver (need ≥ 3.11)"; errors=$$((errors+1)); \
+		else \
+			echo "  [ OK ] Python $$pyver"; \
+		fi; \
+	fi; \
+	seg=models/sherpa-onnx-pyannote-segmentation-3-0; \
+	emb=models/nemo_en_titanet_small.onnx; \
+	if [ ! -d "$$seg" ] || [ ! -f "$$emb" ]; then \
+		echo "  [WARN] Diarization models not found — run: make models"; \
+	else \
+		echo "  [ OK ] Diarization models present"; \
+	fi; \
+	echo ""; \
+	if [ $$errors -eq 0 ]; then \
+		echo "All checks passed."; \
+	else \
+		echo "$$errors check(s) failed. Fix the issues above, then run 'make setup'."; \
+		exit 1; \
+	fi
+
 .PHONY: install
 install: ## Install Python dependencies (uv sync)
 	uv sync
