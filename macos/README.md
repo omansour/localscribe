@@ -17,13 +17,29 @@ out to `uv run --no-sync python -m localscribe transcribe`.
 
 ## Build & run
 
+From the repo root, via the Makefile:
+
+```bash
+make app-run        # build (Release) and launch
+make app-install    # build and install into /Applications, then launch
+make app-build      # build only
+```
+
+Or open it in Xcode and Run (⌘R):
+
 ```bash
 open macos/LocalScribeRecorder/LocalScribeRecorder.xcodeproj
 ```
 
-In Xcode, select the `LocalScribeRecorder` scheme and Run (⌘R). For TCC
-permissions to stick, you may want to set your own Development Team under
-Signing & Capabilities (the project ships with ad-hoc signing `-`).
+For TCC permissions to stick across rebuilds, you may want to set your own
+Development Team under Signing & Capabilities (the project ships with ad-hoc
+signing `-`).
+
+> **Note:** the Makefile builds into `~/Library/Caches/LocalScribeRecorder-build`,
+> not inside the repo. This project lives under `~/Documents`, which iCloud Drive
+> syncs and stamps with extended attributes that make `codesign` fail
+> (`resource fork, Finder information, or similar detritus not allowed`).
+> Building outside the synced folder avoids that.
 
 ## Permissions
 
