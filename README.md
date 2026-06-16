@@ -171,6 +171,29 @@ make record OUT=audio/test2.wav DEVICE=:3
 If the first recording comes out empty, grant your terminal microphone access in
 System Settings → Privacy & Security → Microphone.
 
+## Recording a meeting with the menu bar app (mic + system audio)
+
+For calls/meetings, a small native macOS menu bar app (`macos/`) captures your
+**microphone** and the **system audio output** (the other participants) at the
+same time, mixes them into a single mono 16 kHz WAV in `audio/`, and lets you
+launch a transcription with one click. It is purely additive — it produces the
+same WAV format as `make record` and shells out to the existing CLI.
+
+```bash
+make app-run        # build (Release) and launch
+make app-install    # build and install into /Applications, then launch
+make app-build      # build only
+
+# or open it in Xcode and Run (⌘R):
+open macos/LocalScribeRecorder/LocalScribeRecorder.xcodeproj
+```
+
+Requires **full Xcode** (not just Command Line Tools) and macOS 14+. On first run
+it asks for **Microphone** and **Screen Recording** permission (ScreenCaptureKit
+needs the latter even for audio-only capture; if denied, only the mic is
+recorded). See `macos/README.md` for details, configuration, and the known
+clock-drift limitation on very long recordings.
+
 ## Project structure
 
 | Item | Role |
@@ -185,6 +208,7 @@ System Settings → Privacy & Security → Microphone.
 | `localscribe/pipeline.py` | End-to-end orchestration |
 | `localscribe/__main__.py` | CLI |
 | `Makefile` | Common commands |
+| `macos/` | Native menu bar app (Swift) to record mic + system audio, then transcribe |
 
 
 

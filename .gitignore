@@ -13,3 +13,12 @@ personas/voiceprints.npz
 __pycache__/
 *.pyc
 .uv/
+
+# Xcode (macOS recorder app)
+macos/**/build/
+macos/**/DerivedData/
+macos/**/*.xcuserstate
+macos/**/xcuserdata/
+
+# macOS
+.DS_Store

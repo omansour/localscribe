@@ -62,6 +62,31 @@ Two kinds, fetched differently:
 - **ASR** models (Parakeet ~2.3 GB, Whisper ~3 GB) → auto-downloaded by MLX on first transcription into the
   shared Hugging Face cache (`~/.cache/huggingface/hub/`, overridable via `HF_HOME`). Not in `models/`.
 
+## macOS menu bar recorder app (`macos/`)
+
+`macos/LocalScribeRecorder/` is a native Swift menu bar app (greenfield Xcode project) that records
+the **microphone** and **system audio output** simultaneously, mixes them to a single mono 16 kHz WAV
+in `audio/`, and triggers `transcribe`. It is **purely additive** — it does not modify any Python code,
+it just produces a WAV identical to `make record`'s output and shells out to the CLI.
+
+- **Build:** requires **full Xcode** (not just Command Line Tools), macOS 14+. CLI build/verify:
+  `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project
+  macos/LocalScribeRecorder/LocalScribeRecorder.xcodeproj -scheme LocalScribeRecorder build`.
+  With only Command Line Tools, you can still type-check the sources: `swiftc -sdk $(xcrun
+  --show-sdk-path) -target arm64-apple-macos14.0 -typecheck macos/.../LocalScribeRecorder/*.swift`.
+- **Capture:** mic via `AVAudioEngine` (`MicRecorder.swift`); system audio via ScreenCaptureKit
+  `SCStream` (`SystemAudioRecorder.swift`) — needs the **Screen Recording** TCC grant even for
+  audio-only, and that grant only takes effect on next launch.
+- **Mix:** ffmpeg `amix=inputs=2:duration=longest:normalize=0 -ac 1 -ar 16000 -sample_fmt s16`
+  (`AudioMixer.swift`), falling back to the single available source if one is empty.
+- **Transcribe:** `Transcriber.swift` runs `uv run --no-sync python -m localscribe transcribe …`.
+  **Load-bearing:** a GUI app does NOT inherit the shell `PATH`, so it uses absolute `uv`/`ffmpeg`
+  paths and injects an explicit `PATH` (default `/opt/homebrew/bin`) into the subprocess env — without
+  it the Python pipeline fails on `shutil.which("ffmpeg")`. Paths are configurable in `Settings.swift`
+  (persisted in `UserDefaults`); `cwd` is the repo root so `output/<stem>.md` resolves as in the CLI.
+- **Known limitation:** mic and system streams have independent clocks; `amix` aligns only at the
+  start, so very long recordings may drift. Documented in `macos/README.md`.
+
 ## Packaging gotcha
 
 PyPI sherpa-onnx wheels are broken on macOS arm64 (missing onnxruntime dylib). `pyproject.toml` pins

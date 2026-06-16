@@ -18,6 +18,16 @@ SPEAKERS ?= -1
 OUT      ?=
 DEVICE   ?= :default
 
+# macOS menu bar recorder app (macos/). Building needs full Xcode; override
+# DEVELOPER_DIR if Xcode lives elsewhere than /Applications/Xcode.app.
+# The build output MUST live outside this repo: ~/Documents is synced by iCloud
+# Drive, which stamps files with extended attributes (com.apple.FinderInfo /
+# fileprovider) that make codesign fail ("detritus not allowed").
+XCODE_PROJECT := macos/LocalScribeRecorder/LocalScribeRecorder.xcodeproj
+APP_BUILD_DIR := $(HOME)/Library/Caches/LocalScribeRecorder-build
+APP_BUNDLE    := $(APP_BUILD_DIR)/Build/Products/Release/LocalScribeRecorder.app
+DEVELOPER_DIR ?= /Applications/Xcode.app/Contents/Developer
+
 # LANG is also a standard shell environment variable (the locale, e.g.
 # "fr_FR.UTF-8"). We only honor it when set explicitly on the make command
 # line (make transcribe ... LANG=fr); a value inherited from the environment
@@ -134,6 +144,28 @@ transcribe: ## Transcribe a file: FILE=audio/x.m4a [SPEAKERS=N] [LANG=fr]
 		exit 1; \
 	}
 	$(RUN) transcribe '$(FILE)' --speakers $(SPEAKERS) $(LANG_FLAG)
+
+.PHONY: app-build
+app-build: ## Build the macOS recorder app (needs full Xcode)
+	@test -d "$(DEVELOPER_DIR)" || { \
+		echo "ERROR: full Xcode not found at $(DEVELOPER_DIR)."; \
+		echo "Install Xcode from the App Store, or pass DEVELOPER_DIR=/path/to/Xcode.app/Contents/Developer."; \
+		exit 1; \
+	}
+	DEVELOPER_DIR=$(DEVELOPER_DIR) xcodebuild -project $(XCODE_PROJECT) \
+		-scheme LocalScribeRecorder -configuration Release \
+		-derivedDataPath $(APP_BUILD_DIR) build
+
+.PHONY: app-run
+app-run: app-build ## Build and launch the macOS recorder app
+	open "$(APP_BUNDLE)"
+
+.PHONY: app-install
+app-install: app-build ## Install the recorder app into /Applications
+	rm -rf "/Applications/LocalScribeRecorder.app"
+	cp -R "$(APP_BUNDLE)" /Applications/
+	@echo "Installed: /Applications/LocalScribeRecorder.app"
+	open "/Applications/LocalScribeRecorder.app"
 
 .PHONY: clean
 clean: ## Remove generated transcriptions and audio files
