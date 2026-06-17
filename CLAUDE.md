@@ -35,6 +35,11 @@ accidentally switches the ASR backend (see the `ifeq ($(origin LANG),command lin
 The pipeline (`pipeline.py::process_file`) is a linear 5-stage flow; each stage lives in its own module:
 
 1. **`audio.py`** — decode any ffmpeg-readable input to mono 16 kHz float32 via a subprocess (no decode libs).
+   Before anything else, `pipeline.py` calls `preprocess_audio()`, which **always** runs an ffmpeg
+   volume-normalization chain (`highpass` + `speechnorm` + `loudnorm`, see `ASR_BOOST_FILTER`) into a
+   temporary WAV that becomes the working source for **both** diarization and ASR. This boosts faint
+   voices the ASR would otherwise drop; it preserves duration so timestamps stay aligned. The temp file
+   is auto-deleted (`finally`), and the original path is kept only to name `output/<stem>.md`.
 2. **`speakers.py`** — diarize into `DiarSegment(start, end, speaker_id)` using sherpa-onnx (pyannote
    segmentation + TitaNet embeddings + fast clustering), then identify: concatenate each anonymous
    speaker's segments, embed, and cosine-match against enrolled voiceprints. Returns `{speaker_id: name}`.
