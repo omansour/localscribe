@@ -15,16 +15,23 @@ Everything is driven through the Makefile (`make help` lists targets). The CLI i
 `uv run --no-sync python -m localscribe <command>`.
 
 ```bash
-make setup                                              # uv sync + download diarization/voiceprint models
+make setup                                              # uv sync + download models + ensure sox
 make enroll NAME="Me" FILES="enroll/a.wav enroll/b.wav" # store a voiceprint
 make list                                               # list enrolled voiceprints
 make transcribe FILE=audio/x.m4a [SPEAKERS=N] [LANG=fr] # main entry point
-make record OUT=audio/x.wav [DEVICE=:3]                 # capture mic to 16 kHz mono WAV (press q, not Ctrl+C)
+make record OUT=audio/x.wav [DEVICE="Mic Name"]         # capture mic to 16 kHz mono WAV via SoX (press q to stop)
 make devices                                            # list avfoundation audio inputs
 ```
 
 There is **no test suite, linter, or formatter** configured. The only way to exercise changes is
 to run `make transcribe` on a sample file.
+
+`make record` uses **SoX** (CoreAudio), not ffmpeg's `avfoundation` indev. This is load-bearing:
+the avfoundation audio demuxer exposes no input sample-rate control and mishandles the device
+clock, producing crackle and intermittently sped-up audio. SoX negotiates the device's native
+rate and resamples offline to 16 kHz mono — matching how the Swift app (`AVAudioEngine`) captures.
+`make devices` still lists inputs via ffmpeg; pass the shown **name** as `DEVICE="..."` (SoX uses
+device names, not the old avfoundation `:index` syntax).
 
 `LANG` is only honored when passed explicitly on the make command line (`make transcribe ... LANG=fr`);
 a `LANG` inherited from the shell environment (the locale) is deliberately ignored so it never
@@ -72,7 +79,7 @@ Two kinds, fetched differently:
 `macos/LocalScribeRecorder/` is a native Swift menu bar app (greenfield Xcode project) that records
 the **microphone** and **system audio output** simultaneously, mixes them to a single mono 16 kHz WAV
 in `audio/`, and triggers `transcribe`. It is **purely additive** — it does not modify any Python code,
-it just produces a WAV identical to `make record`'s output and shells out to the CLI.
+it just produces a WAV the `transcribe` pipeline ingests like `make record`'s output and shells out to the CLI.
 
 - **Build:** requires **full Xcode** (not just Command Line Tools), macOS 14+. CLI build/verify:
   `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project

@@ -16,7 +16,7 @@ FILES    ?=
 FILE     ?=
 SPEAKERS ?= -1
 OUT      ?=
-DEVICE   ?= :default
+DEVICE   ?= default
 
 # macOS menu bar recorder app (macos/). Building needs full Xcode; override
 # DEVELOPER_DIR if Xcode lives elsewhere than /Applications/Xcode.app.
@@ -65,6 +65,11 @@ check: ## Check that all system requirements are met
 	else \
 		echo "  [ OK ] ffmpeg: $$(ffmpeg -version 2>&1 | head -1)"; \
 	fi; \
+	if ! command -v sox >/dev/null 2>&1; then \
+		echo "  [WARN] sox not found — needed for 'make record' (brew install sox)"; \
+	else \
+		echo "  [ OK ] sox: $$(sox --version 2>&1 | head -1)"; \
+	fi; \
 	if ! command -v uv >/dev/null 2>&1; then \
 		echo "  [FAIL] uv not found (see https://docs.astral.sh/uv/)"; errors=$$((errors+1)); \
 	else \
@@ -105,8 +110,18 @@ install: ## Install Python dependencies (uv sync)
 models: ## Download diarization / voiceprint models
 	./models/download_models.sh
 
+.PHONY: sox
+sox: ## Ensure SoX is installed (needed for 'make record')
+	@if command -v sox >/dev/null 2>&1; then \
+		echo "  [ OK ] sox already installed"; \
+	elif command -v brew >/dev/null 2>&1; then \
+		echo "Installing sox via Homebrew (needed for 'make record')..."; brew install sox; \
+	else \
+		echo "  [WARN] sox missing and Homebrew unavailable — install sox manually for 'make record'"; \
+	fi
+
 .PHONY: setup
-setup: install models ## Full setup: install deps + download models
+setup: install models sox ## Full setup: install deps + download models + sox
 	@echo "Setup complete. Next: make enroll NAME=\"Me\" FILES=\"enroll/me_1.wav\""
 
 .PHONY: enroll
@@ -120,18 +135,33 @@ list: ## List enrolled voiceprints
 	$(RUN) list
 
 .PHONY: devices
-devices: ## List available audio input devices (for DEVICE=...)
+devices: ## List audio input devices (use the NAME shown as DEVICE="...")
 	@ffmpeg -hide_banner -f avfoundation -list_devices true -i "" 2>&1 \
 		| sed -n '/audio devices/,/^$$/p' || true
 
 .PHONY: record
-record: ## Record from mic: [OUT=audio/x.wav] [DEVICE=:3]  (press q to stop)
+record: ## Record mic via SoX: [OUT=audio/x.wav] [DEVICE="Mic Name"]  (press q to stop)
 	$(eval OUT := $(or $(OUT),audio/rec_$(shell date +%Y%m%d_%H%M%S).wav))
-	@command -v ffmpeg >/dev/null || (echo "ERROR: ffmpeg not found (brew install ffmpeg)"; exit 1)
+	@command -v sox >/dev/null || (echo "ERROR: sox not found (brew install sox)"; exit 1)
 	@mkdir -p $(dir $(OUT))
 	@echo "Recording from device '$(DEVICE)' -> $(OUT)"
-	@echo "Speak now. Press 'q' to stop (do NOT use Ctrl+C)."
-	ffmpeg -hide_banner -f avfoundation -i "$(DEVICE)" -ac 1 -ar 16000 -sample_fmt s16 -y "$(OUT)"
+	@echo "Speak now. Press 'q' to stop (Ctrl+C also works)."
+	@# SoX captures via CoreAudio (negotiates the device's native rate) and
+	@# resamples offline to 16 kHz mono, avoiding ffmpeg/avfoundation's
+	@# real-time sample-rate bug (crackle / sped-up audio). It runs in the
+	@# background so we can stop it on 'q' by sending SIGINT, which makes SoX
+	@# finalize the WAV header cleanly (same as Ctrl+C).
+	@bash -c 'if [ "$(DEVICE)" = "default" ]; then \
+	    sox -d -b 16 -c 1 -r 16000 "$(OUT)" & \
+	  else \
+	    sox -t coreaudio "$(DEVICE)" -b 16 -c 1 -r 16000 "$(OUT)" & \
+	  fi; \
+	  pid=$$!; \
+	  if [ -t 0 ]; then \
+	    while :; do read -rsn1 k; [ "$$k" = "q" ] && break; done; \
+	    kill -INT $$pid 2>/dev/null || true; \
+	  fi; \
+	  wait $$pid 2>/dev/null || true'
 	@echo "Saved: $(OUT)"
 
 .PHONY: transcribe

@@ -6,8 +6,8 @@ them into a single mono 16 kHz WAV in the repo's `audio/` folder, and lets you
 launch the existing `localscribe transcribe` pipeline on it with one click.
 
 It is purely additive — it does **not** modify any Python code. It just produces
-a WAV that is byte-for-byte compatible with what `make record` makes, then shells
-out to `uv run --no-sync python -m localscribe transcribe`.
+a WAV that the `transcribe` pipeline ingests the same way as `make record`'s
+output, then shells out to `uv run --no-sync python -m localscribe transcribe`.
 
 ## Requirements
 

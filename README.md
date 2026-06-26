@@ -15,14 +15,14 @@ Everything runs offline. No NVIDIA GPU, no cloud, no Hugging Face token required
 | Target | Description |
 |--------|-------------|
 | `make help` | Show available targets |
-| `make check` | Verify all system requirements (arch, ffmpeg, uv, Python, models) |
+| `make check` | Verify all system requirements (arch, ffmpeg, sox, uv, Python, models) |
 | `make install` | Install Python dependencies (`uv sync`) |
 | `make models` | Download diarization / voiceprint models |
-| `make setup` | Full setup: install deps + download models |
+| `make setup` | Full setup: install deps + download models + ensure sox |
 | `make enroll` | Enroll a voice: `NAME="Me" FILES="enroll/a.wav enroll/b.wav"` |
 | `make list` | List enrolled voiceprints |
-| `make devices` | List available audio input devices (for `DEVICE=...`) |
-| `make record` | Record from mic: `[OUT=audio/x.wav] [DEVICE=:3]` (press `q` to stop) |
+| `make devices` | List audio input devices (use the name shown as `DEVICE="..."`) |
+| `make record` | Record mic via SoX: `[OUT=audio/x.wav] [DEVICE="Mic Name"]` (press `q` to stop) |
 | `make transcribe` | Transcribe a file: `FILE=audio/x.m4a [SPEAKERS=N] [LANG=fr]` |
 | `make clean` | Remove generated transcriptions and audio files |
 | `make clean-all` | Remove venv, downloaded models and voiceprints (full reset) |
@@ -37,6 +37,7 @@ so any format ffmpeg can read works: **wav, mp3, m4a, flac, ogg, ...** as well a
 
 - macOS Apple Silicon (M1/M2/M3/M4)
 - `ffmpeg`: `brew install ffmpeg`
+- `sox` (only for `make record`): `brew install sox` — `make setup` installs it for you
 - `uv` (Python package manager)
 
 Run `make check` to verify all prerequisites before installing.
@@ -76,7 +77,7 @@ Put 1 to 3 clips where you speak alone, in a quiet setting (10-30 s each) into `
 make enroll NAME="Me" FILES="enroll/me_1.wav enroll/me_2.wav"
 ```
 
-You can record those clips straight from your mic (press `q` to stop, not `Ctrl+C`):
+You can record those clips straight from your mic (press `q` to stop):
 
 ```bash
 make record OUT=enroll/me_1.wav
@@ -151,21 +152,24 @@ uv run python -m localscribe transcribe audio/meeting.m4a --speakers 2 --languag
 
 ## Recording audio from the CLI
 
-`make record` captures your mic straight to a 16 kHz mono WAV:
+`make record` captures your mic to a 16 kHz mono WAV using **SoX** (install with
+`brew install sox`; `make setup` does this for you). SoX records through CoreAudio
+and resamples offline, avoiding the crackle / sped-up-audio artifacts that
+ffmpeg's `avfoundation` device produces (it has no input sample-rate control):
 
 ```bash
 make record OUT=audio/test2.wav
 ```
 
-Speak, then press **`q`** to stop. Use `q`, not `Ctrl+C`: it lets ffmpeg flush the
-last buffer and finalize the WAV header, so you never lose the final second.
+Speak, then press **`q`** to stop (or `Ctrl+C`). Either way SoX finalizes the WAV
+header cleanly, so you never lose the final second.
 
 By default it records the system's **default input device**. To pick a specific
-one, list the devices and pass its avfoundation index via `DEVICE`:
+one, list the devices and pass its **name** via `DEVICE`:
 
 ```bash
-make devices                          # e.g. [3] MacBook Pro Microphone
-make record OUT=audio/test2.wav DEVICE=:3
+make devices                                        # e.g. [1] MacBook Pro Microphone
+make record OUT=audio/test2.wav DEVICE="MacBook Pro Microphone"
 ```
 
 If the first recording comes out empty, grant your terminal microphone access in
